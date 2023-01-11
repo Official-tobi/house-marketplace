@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   collection,
   getDocs,
@@ -12,10 +13,12 @@ import { db } from "../firebase.config";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 import ListingItem from "../components/ListingItem";
-function Offers() {
+function Category() {
   const [listings, setListings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastFetchedListing, setLastFetchedListing] = useState(null);
+
+  const params = useParams();
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -24,9 +27,9 @@ function Offers() {
 
         const q = query(
           listingsRef,
-          where("offer", "==", true),
+          where("type", "==", params.categoryName),
           orderBy("timestamp", "desc"),
-          limit(2)
+          limit(10)
         );
 
         const querySnap = await getDocs(q);
@@ -50,7 +53,9 @@ function Offers() {
     };
 
     fetchListings();
-  }, []);
+  }, [params.categoryName]);
+
+  // pagination / load more
 
   const onFetchMoreListings = async () => {
     try {
@@ -58,7 +63,7 @@ function Offers() {
 
       const q = query(
         listingsRef,
-        where("offer", "==", true),
+        where("type", "==", params.categoryName),
         orderBy("timestamp", "desc"),
         startAfter(lastFetchedListing),
         limit(10)
@@ -87,7 +92,11 @@ function Offers() {
   return (
     <div className="category">
       <header>
-        <p className="pageHeader">Offers</p>
+        <p className="pageHeader">
+          {params.categoryName === "rent"
+            ? "Places for rent"
+            : "Places for sale"}
+        </p>
       </header>
       {loading ? (
         <Spinner />
@@ -104,6 +113,7 @@ function Offers() {
               ))}
             </ul>
           </main>
+
           <br />
           <br />
           {lastFetchedListing && (
@@ -113,10 +123,10 @@ function Offers() {
           )}
         </>
       ) : (
-        <p>No listings for current offers</p>
+        <p>No listings for {params.categoryName}</p>
       )}
     </div>
   );
 }
 
-export default Offers;
+export default Category;
